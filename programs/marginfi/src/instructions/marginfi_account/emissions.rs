@@ -1,5 +1,5 @@
 use anchor_lang::{prelude::*, Accounts, ToAccountInfo};
-use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token_interface::{self, transfer_checked, TransferChecked, TokenInterface};
 
 use crate::{
     check,
@@ -40,17 +40,19 @@ pub fn lending_account_withdraw_emissions(
             &[*ctx.bumps.get("emissions_auth").unwrap()],
         ]];
 
-        transfer(
+        transfer_checked(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
-                Transfer {
+                TransferChecked {
                     from: ctx.accounts.emissions_vault.to_account_info(),
                     to: ctx.accounts.destination_account.to_account_info(),
                     authority: ctx.accounts.emissions_auth.to_account_info(),
+                    mint: ctx.accounts.emissions_mint.to_account_info(),
                 },
                 signer_seeds,
             ),
             emissions_settle_amount,
+            ctx.accounts.emissions_mint.decimals,
         )?;
     }
 
@@ -81,7 +83,7 @@ pub struct LendingAccountWithdrawEmissions<'info> {
     #[account(
         address = bank.load()?.emissions_mint
     )]
-    pub emissions_mint: Account<'info, Mint>,
+    pub emissions_mint: InterfaceAccount<'info, token_interface::Mint>,
 
     #[account(
         seeds = [
@@ -103,11 +105,11 @@ pub struct LendingAccountWithdrawEmissions<'info> {
         ],
         bump,
     )]
-    pub emissions_vault: Box<Account<'info, TokenAccount>>,
+    pub emissions_vault: Box<InterfaceAccount<'info, token_interface::TokenAccount>>,
 
     #[account(mut)]
-    pub destination_account: Box<Account<'info, TokenAccount>>,
-    pub token_program: Program<'info, Token>,
+    pub destination_account: Box<InterfaceAccount<'info, token_interface::TokenAccount>>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 /// Permissionlessly settle unclaimed emissions to a users account.

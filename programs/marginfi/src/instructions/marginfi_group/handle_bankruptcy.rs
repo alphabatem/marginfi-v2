@@ -13,7 +13,7 @@ use crate::{
     MarginfiResult,
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount, Transfer};
+use anchor_spl::token_interface::{self, transfer_checked, TransferChecked, TokenInterface};
 use fixed::types::I80F48;
 use std::cmp::{max, min};
 
@@ -78,10 +78,11 @@ pub fn lending_pool_handle_bankruptcy(ctx: Context<LendingPoolHandleBankruptcy>)
         covered_by_insurance
             .checked_to_num()
             .ok_or_else(math_error!())?,
-        Transfer {
+        TransferChecked {
             from: ctx.accounts.insurance_vault.to_account_info(),
             to: ctx.accounts.liquidity_vault.to_account_info(),
             authority: ctx.accounts.insurance_vault_authority.to_account_info(),
+            mint: ctx.accounts.mint.to_account_info(),
         },
         token_program.to_account_info(),
         bank_signer!(
@@ -160,7 +161,7 @@ pub struct LendingPoolHandleBankruptcy<'info> {
         ],
         bump = bank.load()?.insurance_vault_bump
     )]
-    pub insurance_vault: Box<Account<'info, TokenAccount>>,
+    pub insurance_vault: Box<InterfaceAccount<'info, token_interface::TokenAccount>>,
 
     /// CHECK: Seed constraint
     #[account(
@@ -172,5 +173,10 @@ pub struct LendingPoolHandleBankruptcy<'info> {
     )]
     pub insurance_vault_authority: AccountInfo<'info>,
 
-    pub token_program: Program<'info, Token>,
+    #[account(
+        address = bank.load()?.mint
+    )]
+    pub mint: InterfaceAccount<'info, token_interface::Mint>,
+
+    pub token_program: Interface<'info, TokenInterface>,
 }

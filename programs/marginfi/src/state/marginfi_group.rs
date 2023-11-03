@@ -16,7 +16,7 @@ use crate::{
     set_if_some, MarginfiResult,
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::{transfer, Transfer};
+use anchor_spl::token_interface::{transfer_checked, TransferChecked};
 use fixed::types::I80F48;
 use pyth_sdk_solana::{load_price_feed_from_account_info, PriceFeed};
 use std::{
@@ -548,7 +548,7 @@ impl Bank {
     pub fn deposit_spl_transfer<'b: 'c, 'c: 'b>(
         &self,
         amount: u64,
-        accounts: Transfer<'b>,
+        accounts: TransferChecked<'b>,
         program: AccountInfo<'c>,
     ) -> MarginfiResult {
         check!(
@@ -564,13 +564,13 @@ impl Bank {
             accounts.authority.key
         );
 
-        transfer(CpiContext::new(program, accounts), amount)
+        transfer_checked(CpiContext::new(program, accounts), amount, self.mint_decimals)
     }
 
     pub fn withdraw_spl_transfer<'b: 'c, 'c: 'b>(
         &self,
         amount: u64,
-        accounts: Transfer<'b>,
+        accounts: TransferChecked<'b>,
         program: AccountInfo<'c>,
         signer_seeds: &[&[&[u8]]],
     ) -> MarginfiResult {
@@ -582,9 +582,9 @@ impl Bank {
             accounts.authority.key
         );
 
-        transfer(
+        transfer_checked(
             CpiContext::new_with_signer(program, accounts, signer_seeds),
-            amount,
+            amount, self.mint_decimals
         )
     }
 

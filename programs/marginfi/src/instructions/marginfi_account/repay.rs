@@ -9,7 +9,7 @@ use crate::{
     },
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, Transfer};
+use anchor_spl::token_interface::{self, transfer_checked, TransferChecked, TokenInterface};
 use fixed::types::I80F48;
 use solana_program::{clock::Clock, sysvar::Sysvar};
 
@@ -65,10 +65,11 @@ pub fn lending_account_repay(
 
     bank_account.deposit_spl_transfer(
         spl_deposit_amount,
-        Transfer {
+        TransferChecked {
             from: signer_token_account.to_account_info(),
             to: bank_liquidity_vault.to_account_info(),
             authority: signer.to_account_info(),
+            mint: ctx.accounts.mint.to_account_info(),
         },
         token_program.to_account_info(),
     )?;
@@ -125,5 +126,10 @@ pub struct LendingAccountRepay<'info> {
     )]
     pub bank_liquidity_vault: AccountInfo<'info>,
 
-    pub token_program: Program<'info, Token>,
+    #[account(
+        address = bank.load()?.mint
+    )]
+    pub mint: InterfaceAccount<'info, token_interface::Mint>,
+
+    pub token_program: Interface<'info, TokenInterface>,
 }

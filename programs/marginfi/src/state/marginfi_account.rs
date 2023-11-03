@@ -14,7 +14,7 @@ use crate::{
     utils::NumTraitsWithTolerance,
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::Transfer;
+use anchor_spl::token_interface::TransferChecked;
 use fixed::types::I80F48;
 
 use std::{
@@ -1074,7 +1074,7 @@ impl<'a> BankAccountWrapper<'a> {
     pub fn deposit_spl_transfer<'b: 'c, 'c: 'b>(
         &self,
         amount: u64,
-        accounts: Transfer<'b>,
+        accounts: TransferChecked<'b>,
         program: AccountInfo<'c>,
     ) -> MarginfiResult {
         self.bank.deposit_spl_transfer(amount, accounts, program)
@@ -1083,7 +1083,7 @@ impl<'a> BankAccountWrapper<'a> {
     pub fn withdraw_spl_transfer<'b: 'c, 'c: 'b>(
         &self,
         amount: u64,
-        accounts: Transfer<'b>,
+        accounts: TransferChecked<'b>,
         program: AccountInfo<'c>,
         signer_seeds: &[&[&[u8]]],
     ) -> MarginfiResult {

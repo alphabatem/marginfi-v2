@@ -22,8 +22,8 @@ mainnet-beta = []
 debug = []
 
 [dependencies]
-anchor-lang = "0.26.0"
-anchor-spl = "0.26.0"
+anchor-lang = "0.27.0"
+anchor-spl = "0.27.0"
 bytemuck = "1.9.1"
 cfg-if = "1.0.0"
 enum_dispatch = "0.3.11"
@@ -31,10 +31,15 @@ fixed = "1.12.0"
 fixed-macro = "1.2.0"
 lazy_static = "1.4.0"
 pyth-sdk-solana = "0.7.0"
-solana-program = "1.14.13"
+solana-program = "1.14.17"
 static_assertions = "1.1.0"
 switchboard-v2 = "=0.1.22"
 type-layout = "0.2.0"
+getrandom = { version = "0.2.9", features = ["custom"] }
+blake3 = "1.4.1"
+winnow="=0.4.1"
+toml_datetime="=0.6.1"
+
 
 [dev-dependencies]
 anyhow = "1.0.66"

@@ -9,7 +9,7 @@ use crate::{
     MarginfiResult,
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount, Transfer};
+use anchor_spl::token_interface::{self, transfer_checked, TransferChecked, TokenInterface};
 use fixed::types::I80F48;
 use std::cmp::min;
 
@@ -57,10 +57,11 @@ pub fn lending_pool_collect_bank_fees(ctx: Context<LendingPoolCollectBankFees>) 
         group_fee_transfer_amount
             .checked_to_num()
             .ok_or_else(math_error!())?,
-        Transfer {
+        TransferChecked {
             from: liquidity_vault.to_account_info(),
             to: fee_vault.to_account_info(),
             authority: liquidity_vault_authority.to_account_info(),
+            mint: ctx.accounts.mint.to_account_info(),
         },
         token_program.to_account_info(),
         bank_signer!(
@@ -74,10 +75,11 @@ pub fn lending_pool_collect_bank_fees(ctx: Context<LendingPoolCollectBankFees>) 
         insurance_fee_transfer_amount
             .checked_to_num()
             .ok_or_else(math_error!())?,
-        Transfer {
+        TransferChecked {
             from: liquidity_vault.to_account_info(),
             to: insurance_vault.to_account_info(),
             authority: liquidity_vault_authority.to_account_info(),
+            mint: ctx.accounts.mint.to_account_info(),
         },
         token_program.to_account_info(),
         bank_signer!(
@@ -132,7 +134,7 @@ pub struct LendingPoolCollectBankFees<'info> {
         ],
         bump = bank.load()?.liquidity_vault_bump
     )]
-    pub liquidity_vault: Account<'info, TokenAccount>,
+    pub liquidity_vault: InterfaceAccount<'info, token_interface::TokenAccount>,
 
     /// CHECK: ⋐ ͡⋄ ω ͡⋄ ⋑
     #[account(
@@ -156,5 +158,10 @@ pub struct LendingPoolCollectBankFees<'info> {
     )]
     pub fee_vault: AccountInfo<'info>,
 
-    pub token_program: Program<'info, Token>,
+    #[account(
+        address = liquidity_vault.mint
+    )]
+    pub mint: InterfaceAccount<'info, token_interface::Mint>,
+
+    pub token_program: Interface<'info, TokenInterface>,
 }

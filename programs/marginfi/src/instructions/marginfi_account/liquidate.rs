@@ -14,7 +14,7 @@ use crate::{
     state::marginfi_account::{BankAccountWrapper, MarginfiAccount},
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount, Transfer};
+use anchor_spl::token_interface::{self, transfer_checked, TransferChecked, TokenInterface};
 use fixed::types::I80F48;
 use solana_program::clock::Clock;
 use solana_program::sysvar::Sysvar;
@@ -275,13 +275,14 @@ pub fn lending_account_liquidate(
             // Insurance fund receives fee
             liquidatee_liab_bank_account.withdraw_spl_transfer(
                 insurance_fee_to_transfer,
-                Transfer {
+                TransferChecked {
                     from: ctx.accounts.bank_liquidity_vault.to_account_info(),
                     to: ctx.accounts.bank_insurance_vault.to_account_info(),
                     authority: ctx
                         .accounts
                         .bank_liquidity_vault_authority
                         .to_account_info(),
+                    mint: ctx.accounts.liab_mint.to_account_info(),
                 },
                 ctx.accounts.token_program.to_account_info(),
                 bank_signer!(
@@ -412,7 +413,7 @@ pub struct LendingAccountLiquidate<'info> {
         ],
         bump = liab_bank.load()?.liquidity_vault_bump
     )]
-    pub bank_liquidity_vault: Box<Account<'info, TokenAccount>>,
+    pub bank_liquidity_vault: Box<InterfaceAccount<'info, token_interface::TokenAccount>>,
 
     /// CHECK: Seed constraint
     #[account(
@@ -425,5 +426,10 @@ pub struct LendingAccountLiquidate<'info> {
     )]
     pub bank_insurance_vault: AccountInfo<'info>,
 
-    pub token_program: Program<'info, Token>,
+    #[account(
+        address = liab_bank.load()?.mint
+    )]
+    pub liab_mint: InterfaceAccount<'info, token_interface::Mint>,
+
+    pub token_program: Interface<'info, TokenInterface>,
 }

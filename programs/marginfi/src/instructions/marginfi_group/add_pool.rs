@@ -8,7 +8,7 @@ use crate::{
     MarginfiResult,
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token_interface::{self, transfer_checked, TransferChecked, TokenInterface};
 
 /// Add a bank to the lending pool
 ///
@@ -80,7 +80,7 @@ pub struct LendingPoolAddBank<'info> {
     )]
     pub admin: Signer<'info>,
 
-    pub bank_mint: Box<Account<'info, Mint>>,
+    pub bank_mint: Box<InterfaceAccount<'info, token_interface::Mint>>,
 
     #[account(
         init,
@@ -110,7 +110,7 @@ pub struct LendingPoolAddBank<'info> {
         ],
         bump,
     )]
-    pub liquidity_vault: Box<Account<'info, TokenAccount>>,
+    pub liquidity_vault: Box<InterfaceAccount<'info, token_interface::TokenAccount>>,
 
     /// CHECK: ⋐ ͡⋄ ω ͡⋄ ⋑
     #[account(
@@ -133,7 +133,7 @@ pub struct LendingPoolAddBank<'info> {
         ],
         bump,
     )]
-    pub insurance_vault: Box<Account<'info, TokenAccount>>,
+    pub insurance_vault: Box<InterfaceAccount<'info, token_interface::TokenAccount>>,
 
     /// CHECK: ⋐ ͡⋄ ω ͡⋄ ⋑
     #[account(
@@ -156,9 +156,9 @@ pub struct LendingPoolAddBank<'info> {
         ],
         bump,
     )]
-    pub fee_vault: Box<Account<'info, TokenAccount>>,
+    pub fee_vault: Box<InterfaceAccount<'info, token_interface::TokenAccount>>,
 
     pub rent: Sysvar<'info, Rent>,
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }
